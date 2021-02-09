@@ -1,6 +1,8 @@
 import os
 import cv2
 import numpy as np
+import wx
+import time
 
 
 class Finder:
@@ -8,8 +10,15 @@ class Finder:
         self.base = 'images/test1.png'
         self.templates = ['images/red_gem_left.png']
         self.debug = False
+        self.centers = []
+        self.rectangles = []
 
     def find_images(self):
+        # Resetting cetners and rectangles
+        self.centers = []
+        self.rectangles = []
+
+        # Setting method
         method = cv2.TM_CCOEFF_NORMED
 
         # Read the base images and turning it to gray scale
@@ -35,12 +44,12 @@ class Finder:
             # get locations of all omages above threshold
             loc = np.where(result >= threshold)
 
-            # Draw rectangules frop each location
-            centers = []
+            # Draw rectangles frop each location
             for point in zip(*loc[::-1]):
-
-                # Store centers of rectangules
-                centers.append((point[0] + width / 2, point[1] + height / 2))
+                # top-left, width, height
+                self.rectangles.append((point, width, height))
+                # Store centers of rectangles
+                self.centers.append((point[0] + width / 2, point[1] + height / 2))
                 if self.debug:
                     cv2.rectangle(base_cv_rgb, point, (point[0] + width, point[1] + height), (0, 0, 255), 2)
 
@@ -52,13 +61,31 @@ class Finder:
         if self.debug:
             cv2.waitKey(0)
 
+    def draw_rentangles(self):
+        app = wx.App()
+        dc = wx.ScreenDC()
+        dc.StartDrawingOnTop(None)
+        dc.SetPen(wx.Pen('red', 2))
+        dc.SetBrush(wx.TRANSPARENT_BRUSH)
+        for rectangle in self.rectangles:
+            boxwidth = rectangle[1]
+            boxheight = rectangle[2]
+            x = rectangle[0][0]
+            y = rectangle[0][1]
+            dc.DrawRectangle(x, y, boxwidth, boxheight)
+            time.sleep(0.5)
+            dc.Clear()
+
 
 if __name__ == "__main__":
     finder = Finder()
     templates = [os.path.abspath(os.path.join('images', 'Mining', path)) for path in os.listdir('images/Mining')]
     finder.templates = templates
     files = [os.path.abspath(os.path.join('images', path)) for path in os.listdir('images')]
+    finder.debug = True
     for test_file in files:
         if "test" in test_file:
             finder.base = test_file
             finder.find_images()
+            finder.draw_rentangles()
+
