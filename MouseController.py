@@ -1,10 +1,12 @@
+import logging
+
 import win32api
 import win32con
 
 
 class MouseController:
     def __init__(self):
-        pass
+        self.logger = logging.getLogger(__name__)
 
     @staticmethod
     def click(x, y):

@@ -13,7 +13,7 @@
 			"Mining" : ["weapon.png"]
 		}
 		,
-		"tool" : {
+		"tools" : {
 			"Mining" : ["pickaxe.png"]
 		}
 	}

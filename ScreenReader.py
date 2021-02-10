@@ -1,5 +1,7 @@
+import logging
 from ctypes import windll
 
+import pywintypes
 from PIL import ImageGrab, Image
 import win32gui
 import win32ui
@@ -9,6 +11,7 @@ import numpy as np
 
 class ScreenReader:
     def __init__(self, program_title='ldplayer(64)', debug=False):
+        self.logger = logging.getLogger(__name__)
         self.program_title = program_title
         self.debug = debug
 
@@ -35,7 +38,10 @@ class ScreenReader:
     def background_screenshot(self):
         # Get infromation of the windows program
         window_handle = win32gui.FindWindow(None, self.program_title.lower())
-        bbox = win32gui.GetWindowRect(window_handle)
+        try:
+            bbox = win32gui.GetWindowRect(window_handle)
+        except pywintypes.error:
+            return None
         width = bbox[2] - bbox[0]
         height = bbox[3] - bbox[1]
 
