@@ -1,0 +1,20 @@
+{
+	"img_categories" : {
+		"action" : {
+			"Mining" : ["bar.png", "arrow.png"]
+		},
+		"character" : {
+			"Character" : ["back.png", "front.png", "left.png", "right.png"]
+		},
+		"ores" : {
+			"Mining" : ["*gem*png", "*shine*.png"]
+		},
+		"fight" : {
+			"Mining" : ["weapon.png"]
+		}
+		,
+		"tool" : {
+			"Mining" : ["pickaxe.png"]
+		}
+	}
+}

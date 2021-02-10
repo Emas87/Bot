@@ -6,14 +6,10 @@ import time
 
 
 class Finder:
-    def __init__(self, input_templates=('images/red_gem_left.png',), base='images/test1.png', debug=False):
-        self.templates_cv = []
-        self.base = base
-        self.base_cv_rgb = cv2.imread(self.base)
-        self.templates = input_templates
+    def __init__(self, debug=False):
+        self.base = 'images/test1.png'
+        self.templates = ('images/red_gem_left.png',)
         self.debug = debug
-        self.centers = []
-        self.rectangles = []
 
     def find_images_path(self):
         # Resetting cetners and rectangles
@@ -63,22 +59,20 @@ class Finder:
         if self.debug:
             cv2.waitKey(0)
 
-    def find_images(self, offset=(0, 0)):
-        # Resetting cetners and rectangles
-        self.centers = []
-        self.rectangles = []
+    def find_images(self, base_cv_rgb, templates_cv, offset=(0, 0)):
 
         # Setting method
         method = cv2.TM_CCOEFF_NORMED
 
         # Read the base images and turning it to gray scale
-        gray = cv2.cvtColor(self.base_cv_rgb, cv2.COLOR_BGR2GRAY)
+        gray = cv2.cvtColor(base_cv_rgb, cv2.COLOR_BGR2GRAY)
 
         threshold = 0.8
 
         # look for images
         rectangles = []
-        for image in self.templates_cv:
+        centers = []
+        for image in templates_cv:
 
             # read image to look for
             template = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
@@ -97,18 +91,21 @@ class Finder:
                 # top-left, width, height
                 rectangles.append((point[0] + offset[0], point[1] + offset[1], width, height))
                 # Store centers of rectangles
-                self.centers.append((point[0] + offset[0] + width / 2, point[1] + offset[1] + height / 2))
+                centers.append((point[0] + offset[0] + width / 2, point[1] + offset[1] + height / 2))
                 if self.debug:
-                    cv2.rectangle(self.base_cv_rgb, point, (point[0] + offset[0] + width / 2, point[1] + offset[1] +
-                                                            height / 2), (0, 0, 255), 2)
+                    cv2.rectangle(base_cv_rgb, point, (point[0] + offset[0] + width / 2, point[1] + offset[1] +
+                                                       height / 2), (0, 0, 255), 2)
 
         # Display the original image with the rectangle around the match for testing purposes.
         if self.debug:
-            cv2.imshow('output', self.base_cv_rgb)
+            cv2.imshow('output', base_cv_rgb)
 
         # The image is only displayed if we call this, for testing purposes.
         if self.debug:
             cv2.waitKey(0)
+
+        final_rectangles = []
+        final_centers = []
 
         # delete repeated rectangles
         for i in range(0, len(rectangles)):
@@ -123,7 +120,12 @@ class Finder:
                         break
             if matches == 4:
                 continue
-            self.rectangles.append(rectangles[i])
+            final_rectangles.append(rectangles[i])
+            final_centers.append(centers[i])
+
+        final_rectangles = sorted(self.rectangles)
+        final_centers = sorted(self.centers)
+        return final_rectangles, final_centers, True
 
     def draw_rentangles(self):
         print(len(self.rectangles))
@@ -136,13 +138,13 @@ class Finder:
         # for rectangle in self.rectangles:
         #    dc.DrawRectangle(rectangle)
 
-    def load_templates(self):
-        for image_path in self.templates:
+    @staticmethod
+    def load_images(images_path):
+        loaded_list = []
+        for image_path in images_path:
             template = cv2.imread(image_path)
-            self.templates_cv.append(template)
-
-    def load_base_image(self):
-        self.base_cv_rgb = cv2.imread(self.base)
+            loaded_list.append(template)
+        return loaded_list
 
 
 if __name__ == "__main__":
@@ -156,4 +158,3 @@ if __name__ == "__main__":
             finder.base = test_file
             finder.find_images_path()
             finder.draw_rentangles()
-
