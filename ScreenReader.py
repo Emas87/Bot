@@ -38,10 +38,12 @@ class ScreenReader:
     def background_screenshot(self):
         # Get infromation of the windows program
         window_handle = win32gui.FindWindow(None, self.program_title.lower())
-        try:
-            bbox = win32gui.GetWindowRect(window_handle)
-        except pywintypes.error:
+        if window_handle == 0:
             return None
+
+        bbox = win32gui.GetWindowRect(window_handle)
+
+
         width = bbox[2] - bbox[0]
         height = bbox[3] - bbox[1]
 

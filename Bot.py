@@ -1,4 +1,3 @@
-import os
 import sys
 from Finder import Finder
 from ImageDict import ImageDict
@@ -8,7 +7,6 @@ import time
 import multiprocessing
 import numpy
 import json
-import glob
 import logging
 
 
@@ -50,15 +48,20 @@ class Bot:
                                                                               offset=(windows_pos[0], windows_pos[1]))
         else:
             final_rectangles, final_centers, status = self.finder.find_images(screen_shot, self.image_dict.get(key),
-                                                                          offset=(windows_pos[0], windows_pos[1]))
+                                                                              offset=(windows_pos[0], windows_pos[1]))
 
         return final_rectangles, final_centers, status
 
     def keep_drawing_boxes(self, key="ores"):
         i = 0
         all_processes = []
-        while i < 3:
+        while i < 10:
             ores_rectangles, ores_centers, status = self.get_boxes(key)
+            if not status:
+                self.logger.debug("Ores didn't match")
+                time.sleep(1)
+                i += 1
+                continue
             # process = multiprocessing.Process(target=self.finder.draw_rentangles, args=(ores_rectangles,))
             self.finder.draw_rentangles(ores_rectangles)
             # process.start()
@@ -71,7 +74,7 @@ class Bot:
 
     def keep_clicking(self):
         i = 0
-        while i < 20:
+        while i < 10:
             _, ores_centers, status = self.get_boxes("ores")
             if not status:
                 self.logger.debug("Ores didn't match")
@@ -151,4 +154,4 @@ class Bot:
 
 if __name__ == "__main__":
     bot = Bot(debug=False)
-    #bot.keep_drawing_boxes("tools")
+    bot.keep_drawing_boxes("tools")

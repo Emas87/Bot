@@ -7,6 +7,7 @@ from Finder import Finder
 
 class ImageDict(dict):
     def __init__(self):
+        super().__init__()
         self.logger = logging.getLogger(__name__)
 
     def load_images(self, config):

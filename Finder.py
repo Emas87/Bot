@@ -3,8 +3,9 @@ import os
 import cv2
 import numpy as np
 import wx
-
 import time
+
+
 class Finder:
     def __init__(self, debug=False):
         self.logger = logging.getLogger(__name__)
@@ -12,7 +13,7 @@ class Finder:
         self.templates = ('images/red_gem_left.png',)
         self.debug = debug
 
-    def find_images_path(self, base, templates_i, threshold=0.9):
+    def find_images_path(self, base_i, templates_i, threshold=0.85):
         # Resetting cetners and rectangles
         centers = []
         rectangles = []
@@ -21,11 +22,9 @@ class Finder:
         method = cv2.TM_CCOEFF_NORMED
 
         # Read the base images and turning it to gray scale
-        base_cv_rgb = cv2.imread(base)
-        self.logger.debug(base)
+        base_cv_rgb = cv2.imread(base_i)
+        self.logger.debug(base_i)
         gray = cv2.cvtColor(base_cv_rgb, cv2.COLOR_BGR2GRAY)
-
-        threshold = 0.8
 
         # look for images
         for image in templates_i:
@@ -139,11 +138,13 @@ class Finder:
     def draw_rentangles(self, rectangles):
         self.logger.debug(len(rectangles))
         app = wx.App()
+        if app:
+            pass
         dc = wx.ScreenDC()
         dc.StartDrawingOnTop(None)
         dc.SetPen(wx.Pen('red', 2))
         dc.SetBrush(wx.TRANSPARENT_BRUSH)
-        #dc.DrawRectangleList(rectangles)
+        # dc.DrawRectangleList(rectangles)
         for rectangle in rectangles:
             dc.DrawRectangle(rectangle)
             time.sleep(0.05)
@@ -151,7 +152,7 @@ class Finder:
 
     @staticmethod
     def load_image(image_path):
-            return cv2.imread(image_path)
+        return cv2.imread(image_path)
 
 
 if __name__ == "__main__":
@@ -162,5 +163,5 @@ if __name__ == "__main__":
     for test_file in files:
         if "test" in test_file:
             base = test_file
-            finder.find_images_path(base, templates)
-            finder.draw_rentangles()
+            _, rentangles, status = finder.find_images_path(base, templates)
+            finder.draw_rentangles(rentangles)
