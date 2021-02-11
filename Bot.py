@@ -34,7 +34,7 @@ class Bot:
         # Processes
         self.control_process = None
 
-    def get_boxes(self, key, image=None):
+    def get_boxes(self, key, image=None, color=False, threshold=0.85):
         # Will get all matches for the images inside the dict with key 'key'
         screen_shot = self.screen_reader.background_screenshot()
         if screen_shot is None:
@@ -45,10 +45,12 @@ class Bot:
         # screen_shot = self.screen_reader.foreground_screenshot()
         if image is not None:
             final_rectangles, final_centers, status = self.finder.find_images(screen_shot, [image],
-                                                                              offset=(windows_pos[0], windows_pos[1]))
+                                                                              offset=(windows_pos[0], windows_pos[1]),
+                                                                              color=color, threshold=threshold)
         else:
             final_rectangles, final_centers, status = self.finder.find_images(screen_shot, self.image_dict.get(key),
-                                                                              offset=(windows_pos[0], windows_pos[1]))
+                                                                              offset=(windows_pos[0], windows_pos[1]),
+                                                                              color=color, threshold=threshold)
 
         return final_rectangles, final_centers, status
 
@@ -111,14 +113,29 @@ class Bot:
         return 0, 0, False
 
     def start(self):
-        self.control_process = multiprocessing.Process(target=self.control_mining)
+        # self.control_process = multiprocessing.Process(target=self.control_mining)
+        # self.control_process.start()
+        self.control_mining()
 
     def stop(self):
         self.control_process.terminate()
 
     def control_mining(self):
+        waiting_time = 1
+        ores_centers_save = ()
+        enemy_centers_save = ()
+        # TODO plan what to do if is stuck, in this case in enemiew, and there is no enemies
         while True:
-            # TODO Look for enemies
+            # Look for enemies
+            _, enemi_centers, status = self.get_boxes("enemies", threshold=0.64)
+            if not status:
+                self.logger.debug("No enemy found")
+            elif len(enemi_centers) > 0:
+                # self.measure_time(self.press_action_button, args="pickaxe")
+                self.press_button("fight", "weapon")
+                self.logger.info("Click in weapon")
+                time.sleep(waiting_time/2)
+                continue
 
             # Look for action image
             _, action_centers, status = self.get_boxes("action")
@@ -127,13 +144,45 @@ class Bot:
             elif len(action_centers) > 0:
                 # self.measure_time(self.press_action_button, args="pickaxe")
                 self.press_button("tools", "pickaxe")
+                self.logger.info("Click in pickaxe")
+                time.sleep(waiting_time)
                 continue
+
+            # Look for chests, open it and close it
+            chest = self.press_button("secuence", "chest")
+            while chest:
+                chest_button = self.press_button("secuence", "chest_button")
+                while chest_button:
+                    claim_all = self.press_button("secuence", "claim_all")
+                    while claim_all:
+                        close = self.press_button("secuence", "close")
+                        if close:
+                            chest = False
+                            chest_button = False
+                            break
 
             # Look for ores
             _, ores_centers, status = self.get_boxes("ores")
+            if not status:
+                self.logger.debug("Ores didn't match")
+                time.sleep(waiting_time)
+                continue
+            x, y, status = self.get_closest_center(ores_centers)
+            if status:
+                if ores_centers_save == ores_centers:
+                    # This means that ores is in a place where can't be mined
+                    self.press_button("tools", "pickaxe")
+                ores_centers_save = ores_centers
+                self.mouse_controller.click(x, y)
+                self.logger.info("Click in ore")
+                time.sleep(waiting_time)
+                continue
+            else:
+                self.logger.debug("Character didn't match")
 
             # if not enemies or ores
             self.press_button("tools", "pickaxe")
+            time.sleep(waiting_time)
 
     def press_button(self, category, item):
         item_image = self.image_dict[category][item]
@@ -142,8 +191,10 @@ class Bot:
             x = item_centers[0][0]
             y = item_centers[0][1]
             self.mouse_controller.click(x, y)
+            return True
         else:
-            self.logger.error("Item didn't match: " + item)
+            self.logger.warning("Item didn't match: " + item)
+            return False
 
     def measure_time(self, function, *args):
         time1 = time.time()
@@ -154,4 +205,5 @@ class Bot:
 
 if __name__ == "__main__":
     bot = Bot(debug=False)
-    bot.keep_drawing_boxes("tools")
+    bot.start()
+    # bot.keep_drawing_boxes("tools")

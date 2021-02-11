@@ -13,68 +13,34 @@ class Finder:
         self.templates = ('images/red_gem_left.png',)
         self.debug = debug
 
-    def find_images_path(self, base_i, templates_i, threshold=0.85):
-        # Resetting cetners and rectangles
-        centers = []
-        rectangles = []
+    def find_images(self, base_cv_rgb, templates_cv, offset=(0, 0), threshold=0.85, color=False, path=False):
 
         # Setting method
         method = cv2.TM_CCOEFF_NORMED
 
         # Read the base images and turning it to gray scale
-        base_cv_rgb = cv2.imread(base_i)
-        self.logger.debug(base_i)
-        gray = cv2.cvtColor(base_cv_rgb, cv2.COLOR_BGR2GRAY)
+        if path:
+            self.logger.debug(base_cv_rgb)
+            base_cv_rgb = cv2.imread(base_cv_rgb)
 
-        # look for images
-        for image in templates_i:
-
-            # read image to look for
-            template = cv2.imread(image, cv2.IMREAD_GRAYSCALE)
-
-            # Step 2: Get the size of the template. This is the same size as the match.
-            height, width = template.shape[:2]
-
-            # look for several matches
-            result = cv2.matchTemplate(gray, template, method)
-
-            # get locations of all omages above threshold
-            loc = np.where(result >= threshold)
-
-            # Draw rectangles frop each location
-            for point in zip(*loc[::-1]):
-                # top-left, width, height
-                rectangles.append((point, width, height))
-                # Store centers of rectangles
-                centers.append((point[0] + int(width / 2), point[1] + int(height / 2)))
-                if self.debug:
-                    cv2.rectangle(base_cv_rgb, point, (point[0] + width, point[1] + height), (0, 0, 255), 2)
-
-        # Display the original image with the rectangle around the match for testing purposes.
-        if self.debug:
-            cv2.imshow('output', base_cv_rgb)
-
-        # The image is only displayed if we call this, for testing purposes.
-        if self.debug:
-            cv2.waitKey(0)
-
-        return rectangles, centers, True
-
-    def find_images(self, base_cv_rgb, templates_cv, offset=(0, 0), threshold=0.85):
-
-        # Setting method
-        method = cv2.TM_CCOEFF_NORMED
-
-        # Read the base images and turning it to gray scale
-        gray = cv2.cvtColor(base_cv_rgb, cv2.COLOR_BGR2GRAY)
-
+        if not color:
+            gray = cv2.cvtColor(base_cv_rgb, cv2.COLOR_BGR2GRAY)
+        else:
+            gray = base_cv_rgb
         # look for images
         rectangles = []
         centers = []
         for image in templates_cv:
 
+            if path:
+                # read image to look for
+                image = cv2.imread(image)
+
             # read image to look for
-            template = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+            if not color:
+                template = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+            else:
+                template = image
 
             # Step 2: Get the size of the template. This is the same size as the match.
             height, width = template.shape[:2]
@@ -96,20 +62,6 @@ class Finder:
                 rectangles.append((point[0] + offset[0], point[1] + offset[1], width, height))
                 # Store centers of rectangles
                 centers.append((point[0] + offset[0] + int(width / 2), point[1] + offset[1] + int(height / 2)))
-                if self.debug:
-                    start_point = (point[0] + offset[0], point[1] + offset[1])
-                    end_point = (point[0] + offset[0] + int(width / 2), point[1] + offset[1] + int(height / 2))
-                    color = (0, 0, 255)
-                    thickness = 2
-                    cv2.rectangle(base_cv_rgb, start_point, end_point, color, thickness)
-
-                    # Display the original image with the rectangle around the match for testing purposes.
-        if self.debug:
-            cv2.imshow('output', base_cv_rgb)
-
-        # The image is only displayed if we call this, for testing purposes.
-        if self.debug:
-            cv2.waitKey(0)
 
         final_rectangles = []
         final_centers = []
@@ -132,6 +84,22 @@ class Finder:
 
         final_rectangles = sorted(final_rectangles)
         final_centers = sorted(final_centers)
+
+        # Display the original image with the rectangle around the match for testing purposes.
+        if self.debug:
+            print("Rectangles = " + str(len(final_rectangles)))
+            for rentangle in final_rectangles:
+                point, width, height = (rentangle[0], rentangle[1]), rentangle[2], rentangle[3]
+                start_point = (point[0] + offset[0], point[1] + offset[1])
+                end_point = (point[0] + offset[0] + width, point[1] + offset[1] + height)
+                color_r = (0, 0, 255)
+                thickness = 2
+                cv2.rectangle(base_cv_rgb, start_point, end_point, color_r, thickness)
+
+            cv2.imshow('output', base_cv_rgb)
+
+        # The image is only displayed if we call this, for testing purposes.
+            cv2.waitKey(0)
 
         return final_rectangles, final_centers, True
 
@@ -156,12 +124,12 @@ class Finder:
 
 
 if __name__ == "__main__":
-    finder = Finder()
-    templates = [os.path.abspath(os.path.join('images', 'Mining', path)) for path in os.listdir('images/Mining')]
+    finder = Finder(debug=True)
+    templates = [os.path.abspath(os.path.join('images', 'Enemies', path)) for path in os.listdir('images/Enemies')]
     files = [os.path.abspath(os.path.join('images', path)) for path in os.listdir('images')]
     finder.debug = True
     for test_file in files:
         if "test" in test_file:
             base = test_file
-            _, rentangles, status = finder.find_images_path(base, templates)
-            finder.draw_rentangles(rentangles)
+            _, rentangles, status = finder.find_images(base, templates, threshold=0.64, path=True)
+            # finder.draw_rentangles(rentangles)

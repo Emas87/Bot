@@ -1,7 +1,7 @@
 {
 	"img_categories" : {
 		"action" : {
-			"Mining" : ["bar.png", "arrow.png"]
+			"Actions" : ["bar.png", "arrow.png"]
 		},
 		"character" : {
 			"Character" : ["back.png", "front.png", "left.png", "right.png"]
@@ -11,10 +11,15 @@
 		},
 		"fight" : {
 			"Mining" : ["weapon.png"]
-		}
-		,
+		},
 		"tools" : {
 			"Mining" : ["pickaxe.png"]
+		},
+		"enemies" : {
+			"Enemies" : ["ghost_down.png", "ghost_left.png", "ghost_right.png", "ghost_up.png"]
+		},
+		"secuence" : {
+			"Actions" : ["chest.png", "chest_button.png", "claim_all.png", "close.png"]
 		}
 	}
 }

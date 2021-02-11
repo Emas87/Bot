@@ -19,7 +19,7 @@ class ImageDict(dict):
                     files_path = os.path.abspath(os.path.join("images", directory, image))
                     glob_files = glob.glob(files_path)
                     if len(glob_files) < 1:
-                        self.logger.warning(" file pattern didnt match: " + files_path)
+                        self.logger.error("file pattern didn't match: " + files_path)
                     for glob_file in glob_files:
                         name = os.path.basename(glob_file).split(".")[0]
                         self.add(glob_file, category, name)
